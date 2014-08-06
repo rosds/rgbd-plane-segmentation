@@ -1,0 +1,69 @@
+#include <stdio.h>
+
+#define CudaAssert( X ) if ( !(X) ) { printf( "Thread %d:%d failed assert at %s:%d!", blockIdx.x, threadIdx.x, __FILE__, __LINE__ ); return; }
+
+ushort *d_in;
+float *d_out;
+
+float *stupid;
+
+__global__ void _cudaReadPointCloud(
+        ushort *d_in, 
+        float *d_out, 
+        const int width, 
+        const int height
+) {
+    /*unsigned u = blockDim.x * blockIdx.x + threadIdx.x;*/
+    /*unsigned v = blockDim.y * blockIdx.y + threadIdx.y;*/
+    /*unsigned idx = width * v + u;*/
+    /*double depth = (double)d_in[idx] / 5000.0;*/
+    /*d_out[idx * 4] = (u - 318.6f) * depth / 517.3f;  */
+    /*d_out[idx * 4 + 1] = (v - 255.3f) * depth / 516.5f;*/
+    /*d_out[idx * 4 + 2] = depth;*/
+    /*d_out[idx * 4 + 3] = 1.0f;*/
+
+    /*ushort depth = ushort(d_in[idx]) / 5000.0f;*/
+    /*d_out[idx * 4] = (u - 318.6f) * depth / 517.3f;  */
+    /*d_out[idx * 4 + 1] = (v - 255.3f) * depth / 516.5f;*/
+    /*d_out[idx * 4 + 2] = depth;*/
+    /*d_out[idx * 4 + 3] = 1.0f;*/
+    /*d_out[idx] = d_in[idx];*/
+    /*d_out[idx] = d_in[idx];*/
+    /*d_out[idx] = 1.0f;*/
+    d_out[0] = 125.0f;
+} 
+
+__global__ void lol(float *bla)
+{
+    *bla = 123.0f; 
+}
+
+
+extern void cudaReadPointCloud(
+        ushort *h_in, 
+        float *h_out,
+        const int width, 
+        const int height
+) {
+   
+    dim3 blockSize = dim3(width / 40, height / 40);
+    dim3 gridSize = dim3(40, 40);
+
+    cudaSetDevice(0);
+
+    cudaMalloc(&d_in, width * height * sizeof(ushort));
+    cudaMalloc(&d_out, width * height * sizeof(float));
+
+    cudaMemcpy(d_in, h_in, width * height * sizeof(ushort), cudaMemcpyHostToDevice);
+    _cudaReadPointCloud <<<gridSize, blockSize>>> (d_in, d_out, width, height);
+    cudaThreadSynchronize();
+
+    //lol<<<1, 1>>>(d_out);
+    //cudaMemcpy(d_out, d_in, width * height * sizeof(ushort), cudaMemcpyDeviceToDevice);
+    cudaMemcpy(h_out, d_out, width * height * sizeof(float), cudaMemcpyDeviceToHost);
+
+    printf("before main %f\n", h_out[0]);
+
+    cudaFree(d_in);
+    cudaFree(d_out);
+}
