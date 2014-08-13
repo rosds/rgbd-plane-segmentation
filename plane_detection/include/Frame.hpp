@@ -40,18 +40,37 @@ extern void cudaReadPointCloud(ushort* depth, float* points, const int width, co
 /**
  *  RGB-D frame.
  *  This class is meant to contain the information about one frame of the
- *  dataset. Currently it contains the pcl::PointCloud.
+ *  dataset. Currently it contains 
+ *      - the 3D point cloud
+ *      - the normals of the cloud
+ *      - the segmented planes
  */
 class Frame 
 {
     public:
 
         /**
-         *  @brief Constructor
+         *  @brief Constructor using the path to the image file.
          *
+         *  This constructor takes a string with the file system path to the
+         *  image file from the dataset with the depth values. These images are
+         *  stored as unsigned shorts.
+         *
+         *  @param file_path The path to the image file containing the depth
+         *  information.
          */
         Frame(std::string file_path);
+
+        /**
+         *  @brief Constructor using a point cloud directly
+         *
+         *  This constructor doesn't use the camera information to build the
+         *  point cloud. It simply contains the given point cloud.
+         *
+         *  @param cloud The organized point cloud with the scene information
+         */
         Frame(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud);
+
         ~Frame() {}
 
         static void setCameraParameters(CameraParameters &parameters);
