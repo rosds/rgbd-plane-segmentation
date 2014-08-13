@@ -276,25 +276,23 @@ void DataSet::displaySegmentedFrame(string ts, bool normals)
 
     viewer -> addPointCloud(frame.getPointCloud());
 
-/*
- *    // Segment the frame
- *    std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> planes;
- *    planes = frame.segment_planes();
- *
- *    displayPlanarRegions(frame.regions, viewer);
- *
- *    // Load the segments on the viewer
- *    for (size_t i = 0; i < planes.size(); i++) {
- *        viewer -> addPointCloud<pcl::PointXYZ> (planes[i], "plane" + i);
- *        viewer -> setPointCloudRenderingProperties (
- *                pcl::visualization::PCL_VISUALIZER_COLOR,
- *                color[i][0],
- *                color[i][1],
- *                color[i][2], 
- *                "plane" + i
- *        ); 
- *    }
- */
+    // Segment the frame
+    std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> planes;
+    planes = frame.segment_planes();
+
+    displayPlanarRegions(frame.regions, viewer);
+
+    // Load the segments on the viewer
+    for (size_t i = 0; i < planes.size(); i++) {
+        viewer -> addPointCloud<pcl::PointXYZ> (planes[i], "plane" + i);
+        viewer -> setPointCloudRenderingProperties (
+                pcl::visualization::PCL_VISUALIZER_COLOR,
+                color[i][0],
+                color[i][1],
+                color[i][2], 
+                "plane" + i
+        ); 
+    }
 
     // Visualize normals
     if (normals) {

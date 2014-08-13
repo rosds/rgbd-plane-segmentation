@@ -31,10 +31,11 @@ Frame::Frame(std::string file_path)
 
     std::vector<pcl::PointXYZ, Eigen::aligned_allocator<pcl::PointXYZ> > points(s.width * s.height);
 
-#ifndef WITH_CUDA
-    ushort* depth_value = (ushort*)depth_image.data;
     cloud -> width = depth_image.cols;
     cloud -> height = depth_image.rows;
+
+#ifndef WITH_CUDA
+    ushort* depth_value = (ushort*)depth_image.data;
     cloud -> points.resize(cloud -> width * cloud -> height);
 
     int i = 0;
