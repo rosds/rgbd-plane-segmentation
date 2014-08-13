@@ -1,9 +1,15 @@
 #include <DataSet.hpp>
-#include <stdio.h>
 
-// Constant definitions
-const depth_cam_params DataSet::freiburg2 = {517.3f, 516.5f, 318.6f, 255.3f};
+// Camera parameters for freiburg2 Dataset
+const CameraParameters DataSet::freiburg2 = {
+    517.3f,  // fx 
+    516.5f,  // fy
+    318.6f,  // cx
+    255.3f   // cy
+};
 
+
+// Some colors for the planes
 static double color[][3] = {
     {1.0, 0.501961, 0.501961}, 
     {1.0, 0.627451, 0.501961}, 
@@ -18,23 +24,25 @@ static double color[][3] = {
 };
 
 
-DataSet::DataSet(set_id id)
+DataSet::DataSet(DataSet::dataset_id id)
 {
     switch (id) {
-        case FREIBURG_TWO_DESK:
+        case DataSet::FREIBURG_TWO_DESK:
             depth_params = freiburg2; 
             break;
         default:
             depth_params = freiburg2; 
     }
+
+    Frame::setCameraParameters(depth_params);
 }
 
 
-DataSet::DataSet(set_id id, string dataset_dir)
+DataSet::DataSet(DataSet::dataset_id id, string dataset_dir)
 {
     // Set the camera parameters for the specified dataet
     switch (id) {
-        case FREIBURG_TWO_DESK:
+        case DataSet::FREIBURG_TWO_DESK:
             depth_params = freiburg2; 
             break;
         default:
@@ -43,6 +51,8 @@ DataSet::DataSet(set_id id, string dataset_dir)
 
     // Set the fs directorey containing the data set
     set_directory(dataset_dir);
+
+    Frame::setCameraParameters(depth_params);
 }
 
 
@@ -78,7 +88,7 @@ boost::shared_ptr<pcl::visualization::PCLVisualizer> DataSet::get_pcl_visualizer
 
 Frame DataSet::get_frame(string ts)
 {
-    return Frame(data_set_directory + depth_paths[ts], depth_params);
+    return Frame(data_set_directory + depth_paths[ts]);
 }
 
 
@@ -266,23 +276,25 @@ void DataSet::displaySegmentedFrame(string ts, bool normals)
 
     viewer -> addPointCloud(frame.getPointCloud());
 
-    // Segment the frame
-    std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> planes;
-    planes = frame.segment_planes();
-
-    displayPlanarRegions(frame.regions, viewer);
-
-    // Load the segments on the viewer
-    for (size_t i = 0; i < planes.size(); i++) {
-        viewer -> addPointCloud<pcl::PointXYZ> (planes[i], "plane" + i);
-        viewer -> setPointCloudRenderingProperties (
-                pcl::visualization::PCL_VISUALIZER_COLOR,
-                color[i][0],
-                color[i][1],
-                color[i][2], 
-                "plane" + i
-        ); 
-    }
+/*
+ *    // Segment the frame
+ *    std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> planes;
+ *    planes = frame.segment_planes();
+ *
+ *    displayPlanarRegions(frame.regions, viewer);
+ *
+ *    // Load the segments on the viewer
+ *    for (size_t i = 0; i < planes.size(); i++) {
+ *        viewer -> addPointCloud<pcl::PointXYZ> (planes[i], "plane" + i);
+ *        viewer -> setPointCloudRenderingProperties (
+ *                pcl::visualization::PCL_VISUALIZER_COLOR,
+ *                color[i][0],
+ *                color[i][1],
+ *                color[i][2], 
+ *                "plane" + i
+ *        ); 
+ *    }
+ */
 
     // Visualize normals
     if (normals) {

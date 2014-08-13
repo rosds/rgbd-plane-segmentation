@@ -9,6 +9,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <stdio.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <pcl/common/common_headers.h>
@@ -27,38 +28,62 @@ using namespace cv;
 #define DEPTH_FILE "depth.txt"
 #define GROUNDTRUTH_FILE "combined_file.txt"
 
+
 /**
- * This Enumeration is only to name the camera parameters corresponding to the
- * specific data set.
+ *  RGB-D dataset manipulation class. 
+ *  This class is meant for manipulation of the RGB-D datasets.
  */
-enum set_id {
-    FREIBURG_TWO_DESK,
-};
-
-
 class DataSet 
 {
-    private:
-        depth_cam_params depth_params;
-        string data_set_directory;
-        map<string, string> depth_paths;
-        map<string, Transform3D> groundtruth_transforms;
-
-        /** Private Methods **/
-        void load_dimg_paths();
-        void load_groundtruth();
-        boost::shared_ptr<pcl::visualization::PCLVisualizer> get_pcl_visualizer();
-
     public:
-        /** Constructors **/
-        DataSet(set_id id);
-        DataSet(set_id id, string dataset_dir);
+
+        /**
+         * @brief Benchmark datasets identifier.
+         *
+         * Enumerate the 
+         * <a href="http://vision.in.tum.de/data/datasets/rgbd-dataset/download">
+         * benchmark datasets</a> from the CVPR group at TU München. It is use
+         * to set the particular intrinsic camera information when working with
+         * the selected dataset.
+         */
+        enum dataset_id {
+            FREIBURG_TWO_DESK, /**< Freiburg 2 intrinsic camera parameters */
+        };
+
+        /**
+         *  @brief Only constructs the class using the camera parameters.
+         *
+         *  Builds the class just with the information corresponding to the
+         *  cameras of the dataset specified.
+         *  Notice that for working with the actual images the path to the 
+         *  dataset directory should be specified.
+         *
+         *  @param id The dataset identification number according to the
+         *  DataSet::dataset_id enumerator.
+         *
+         *  @see DataSet::set_directory
+         */
+        DataSet(dataset_id id);
+        
+        /**
+         *  @brief Fully constructs the class with the dataset ID and path to
+         *  the image files.
+         *
+         *  This constructor fully sets the required information to work with
+         *  the specified benchmark dataset.
+         *
+         *  @param id The dataset identification number according to the
+         *  DataSet::dataset_id enumerator.
+         *  @param dataset_dir Path to the directory containing the dataset
+         *  images.
+         */
+        DataSet(dataset_id id, string dataset_dir);
 
         /** Destructor **/
         ~DataSet() {}
 
         /** Intrinsic parameters for the freiburg2 dataset **/
-        static const depth_cam_params freiburg2;
+        static const CameraParameters freiburg2;
 
         void set_directory(string dir);
         Frame get_frame(string ts);
@@ -67,6 +92,17 @@ class DataSet
         void showGroundTruth(int number_of_frames);
         void propagate_segmentation_1();
         void process_entire_data_set(bool screenshots=false);
+
+    private:
+        CameraParameters depth_params;
+        string data_set_directory;
+        map<string, string> depth_paths;
+        map<string, Transform3D> groundtruth_transforms;
+
+        /** Private Methods **/
+        void load_dimg_paths();
+        void load_groundtruth();
+        boost::shared_ptr<pcl::visualization::PCLVisualizer> get_pcl_visualizer();
 };
 
 #endif

@@ -14,14 +14,15 @@ find_package(OpenCV REQUIRED)
 find_package(PCL REQUIRED)
 find_package(OpenMP)
 find_package(CUDA)
+find_package(Doxygen)
 
-if (OPENMP_FOUND)
+if(OPENMP_FOUND)
     set (WITH_OMP ON)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif(OPENMP_FOUND)
 
-if (CUDA_FOUND)
+if(CUDA_FOUND)
     set (WITH_CUDA ON)
     if(CMAKE_BUILD_TYPE MATCHES DEBUG)
         set (CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}; -g -G)
@@ -30,6 +31,16 @@ if (CUDA_FOUND)
     cuda_add_library(cuacceleration SHARED src/Frame.cpp src/Frame.cu)
     add_definitions(-DWITH_CUDA)
 endif(CUDA_FOUND)
+
+if(DOXYGEN_FOUND)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in
+        ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
+    add_custom_target(doc
+        ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Generating API documentation with Doxygen" VERBATIM
+        )
+endif(DOXYGEN_FOUND)
 
 include_directories(include)
 include_directories(${OpenCV_INCLUDE_DIRS})

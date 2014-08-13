@@ -11,6 +11,7 @@
 
 #include <vector>
 #include <string>
+#include <memory>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <pcl/common/common_headers.h>
@@ -26,7 +27,7 @@
 using namespace cv;
 
 /** Intrinsic camera parameters **/
-struct depth_cam_params {
+struct CameraParameters {
     float fx; // focal length 
     float fy;
     float cx; // center of camera
@@ -36,13 +37,24 @@ struct depth_cam_params {
 /** Cuda functions **/
 extern void cudaReadPointCloud(ushort* depth, float* points, const int width, const int height);
 
-
+/**
+ *  RGB-D frame.
+ *  This class is meant to contain the information about one frame of the
+ *  dataset. Currently it contains the pcl::PointCloud.
+ */
 class Frame 
 {
     public:
-        Frame(std::string file_path, depth_cam_params params);
+
+        /**
+         *  @brief Constructor
+         *
+         */
+        Frame(std::string file_path);
         Frame(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud);
         ~Frame() {}
+
+        static void setCameraParameters(CameraParameters &parameters);
 
         /** \brief Getter for the point cloud. */
         pcl::PointCloud<pcl::PointXYZ>::Ptr getPointCloud()
@@ -72,21 +84,29 @@ class Frame
         std::vector<pcl::PointIndices> boundary_indices;
         std::vector<pcl::PointIndices> label_indices;
 
-        /** \brief Transform the cloud with the given affine transformation **/
+        /** @brief Transform the cloud with the given affine transformation **/
         pcl::PointCloud<pcl::PointXYZ>::Ptr transform(const Eigen::Transform<float, 3, Eigen::Affine> &trans);
 
-        /** \brief Transform the cloud with the given affine transformation **/
+        /** @brief Transform the cloud with the given affine transformation **/
         pcl::PointCloud<pcl::PointXYZ>::Ptr transform(const Transform3D &trans);
 
     private:
-        /** \brief Point cloud corresponding to this frame. **/
+
+        /**
+         *  @brief Depth camera intrinsic parameters.
+         *
+         *  These parameters are used mainly to reconstruct a point cloud from
+         *  depth image values.
+         */
+        static CameraParameters* depth_parameters;
+
+        static CameraParameters* getDepthParameters();
+
+        /** @brief Point cloud corresponding to this frame. **/
         pcl::PointCloud<pcl::PointXYZ>::Ptr cloud;
 
-        /** \brief Surface normals **/
+        /** @brief Surface normals **/
         pcl::PointCloud<pcl::Normal>::Ptr normals;
-
-        /** \brief Use CUDA parallelization to create point cloud **/
-
 };
 
 #endif

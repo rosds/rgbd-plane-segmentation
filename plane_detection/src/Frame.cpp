@@ -1,10 +1,27 @@
 #include <Frame.hpp>
-#include <ctime>
 
 
-Frame::Frame(std::string file_path, depth_cam_params depth_params)
+// Global static pointer used to ensure a single instance of class.
+CameraParameters* Frame::depth_parameters = NULL;
+
+
+CameraParameters* Frame::getDepthParameters() 
 {
-    clock_t t1, t2;
+    if (!depth_parameters) {
+        depth_parameters = new CameraParameters;
+    }
+    return depth_parameters;
+}
+
+
+void Frame::setCameraParameters(CameraParameters &parameters)
+{
+    depth_parameters = new CameraParameters(parameters);
+}
+
+
+Frame::Frame(std::string file_path)
+{
     cloud = pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud<pcl::PointXYZ>);
     normals = pcl::PointCloud<pcl::Normal>::Ptr(new pcl::PointCloud<pcl::Normal>);
 
@@ -15,37 +32,24 @@ Frame::Frame(std::string file_path, depth_cam_params depth_params)
     std::vector<pcl::PointXYZ, Eigen::aligned_allocator<pcl::PointXYZ> > points(s.width * s.height);
 
 #ifndef WITH_CUDA
-
     ushort* depth_value = (ushort*)depth_image.data;
     cloud -> width = depth_image.cols;
     cloud -> height = depth_image.rows;
     cloud -> points.resize(cloud -> width * cloud -> height);
 
-    t1 = clock();
     int i = 0;
     for (ushort v = 0; v < depth_image.rows; v++) {
         for (ushort u = 0; u < depth_image.cols; u++, i++, depth_value++) {
             double depth = *depth_value / 5000.0;
             cloud -> points[i].z = depth;
-            cloud -> points[i].x = (u - depth_params.cx) * depth / depth_params.fx;  
-            cloud -> points[i].y = (v - depth_params.cy) * depth / depth_params.fy;
+            cloud -> points[i].x = (u - depth_parameters -> cx) * depth / depth_parameters -> fx;  
+            cloud -> points[i].y = (v - depth_parameters -> cy) * depth / depth_parameters -> fy;
         }   
     }
-    t2 = clock();
-    float diff ((float)t2-(float)t1);
-    printf("w/o cuda: %f (sec)\n", diff / CLOCKS_PER_SEC);
-
 #else
-
-    t1 = clock();
     cudaReadPointCloud((ushort*)depth_image.data, (float*)points.data(), s.width, s.height);
-    t2 = clock();
-    float diff ((float)t2-(float)t1);
-    printf("w cuda: %f (sec)\n", diff / CLOCKS_PER_SEC);
-
-#endif
-
     cloud -> points = points;
+#endif
 }
 
 
