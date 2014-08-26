@@ -8,6 +8,7 @@
 #endif
 
 #include <Transform3D.hpp>
+#include <utils.hpp>
 
 #include <vector>
 #include <string>
@@ -26,9 +27,15 @@
 
 using namespace cv;
 
-/** Intrinsic camera parameters **/
+/**
+ *  @brief Camera intrinsic parameters structure
+ *
+ *  This structure contains the intrinsic camera parameters. The focal length
+ *  with the pixel scaling in both axis fx and fy also the center of coordinates
+ *  in the image plane represented by cx and cy.
+ */
 struct CameraParameters {
-    float fx; // focal length 
+    float fx; /**< focal length */
     float fy;
     float cx; // center of camera
     float cy;
@@ -36,6 +43,7 @@ struct CameraParameters {
 
 /** Cuda functions **/
 extern void cudaReadPointCloud(ushort* depth, float* points, const int width, const int height);
+extern void cudaSegmentPlanes(float* normals, int* labels, const int width, const int height);
 
 /**
  *  RGB-D frame.
@@ -73,21 +81,33 @@ class Frame
 
         ~Frame() {}
 
+        /**
+         *  @brief Setter for global camera parameters for all frames
+         *
+         *  This static member function is used to set the camera parameters for
+         *  all Frame instances which are used to construct the point clouds
+         *  from the dataset images. It is really important to use this function
+         *  before start creating the frame instances.
+         *
+         *  @param parameters The camera parameters
+         *
+         *  @see CameraParameters
+         */
         static void setCameraParameters(CameraParameters &parameters);
 
-        /** \brief Getter for the point cloud. */
+        /** @brief Getter for the point cloud. */
         pcl::PointCloud<pcl::PointXYZ>::Ptr getPointCloud()
         { 
             return cloud; 
         }
 
-        /** \brief Getter for surface normals */
+        /** @brief Getter for surface normals */
         pcl::PointCloud<pcl::Normal>::Ptr getSurfaceNormals()
         { 
             return normals;
         }
         
-        /** \brief Use the pcl::OrganizedMultiPlaneSegmentation to segment the
+        /** @brief Use the pcl::OrganizedMultiPlaneSegmentation to segment the
           * planes in the point cloud of this frame
           */
         std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> segment_planes(
@@ -96,8 +116,13 @@ class Frame
                 double cur=DEFAULT_CURVATURE
         );
 
-        std::vector< pcl::PlanarRegion<pcl::PointXYZ>, Eigen::aligned_allocator<pcl::PlanarRegion<pcl::PointXYZ> > > regions;
+        /**
+         *  @brief Segment the point
+         *  See the Trevor and Gedikli paper
+         */
+        void segmentPlanes();
 
+        std::vector< pcl::PlanarRegion<pcl::PointXYZ>, Eigen::aligned_allocator<pcl::PlanarRegion<pcl::PointXYZ> > > regions;
         std::vector<pcl::ModelCoefficients> model_coefficients;
         std::vector<pcl::PointIndices> inlier_indices;
         std::vector<pcl::PointIndices> boundary_indices;
@@ -126,6 +151,9 @@ class Frame
 
         /** @brief Surface normals **/
         pcl::PointCloud<pcl::Normal>::Ptr normals;
+
+        /** @brief Size of the organized point cloud */
+        cv::Size size;
 };
 
 #endif

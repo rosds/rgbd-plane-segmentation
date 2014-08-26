@@ -27,8 +27,13 @@ if(CUDA_FOUND)
     if(CMAKE_BUILD_TYPE MATCHES DEBUG)
         set (CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}; -g -G)
     endif(CMAKE_BUILD_TYPE MATCHES DEBUG) 
+    cuda_include_directories(include)
     cuda_compile(CUDA_FUNC src/Frame.cu)
-    cuda_add_library(cuacceleration SHARED src/Frame.cpp src/Frame.cu)
+    cuda_add_library(cuacceleration SHARED 
+        src/Frame.cpp 
+        src/Frame.cu
+        src/utils.cpp
+    )
     add_definitions(-DWITH_CUDA)
 endif(CUDA_FOUND)
 
@@ -51,6 +56,7 @@ add_definitions(${PCL_DEFINITIONS})
 
 add_executable(plane_segmentation 
     src/main.cpp 
+    src/utils.cpp
     src/DataSet.cpp 
     src/Frame.cpp
     src/Transform3D.cpp

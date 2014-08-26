@@ -1,12 +1,14 @@
 ushort *d_in;
 float *d_out;
 
+
 __global__ void _cudaReadPointCloud(
         ushort *d_in, 
         float *d_out, 
         const int width, 
         const int height
-) {
+)
+{
     unsigned u = blockDim.x * blockIdx.x + threadIdx.x;
     unsigned v = blockDim.y * blockIdx.y + threadIdx.y;
     unsigned idx = width * v + u;
@@ -23,8 +25,8 @@ extern void cudaReadPointCloud(
         float *h_out,
         const int width, 
         const int height
-) {
-   
+)
+{
     dim3 blockSize = dim3(width / 40, height / 40);
     dim3 gridSize = dim3(40, 40);
 
@@ -39,4 +41,14 @@ extern void cudaReadPointCloud(
 
     cudaFree(d_in);
     cudaFree(d_out);
+}
+
+extern void cudaSegmentPlanes(
+        float* normals, 
+        int* labels, 
+        const int width,
+        const int height
+)
+{
+
 }

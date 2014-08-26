@@ -27,9 +27,9 @@ Frame::Frame(std::string file_path)
 
     /** Read the depth information from the file **/
     Mat depth_image = imread(file_path, CV_LOAD_IMAGE_ANYDEPTH);
-    Size s = depth_image.size();
+    size = depth_image.size();
 
-    std::vector<pcl::PointXYZ, Eigen::aligned_allocator<pcl::PointXYZ> > points(s.width * s.height);
+    std::vector<pcl::PointXYZ, Eigen::aligned_allocator<pcl::PointXYZ> > points(size.width * size.height);
 
     cloud -> width = depth_image.cols;
     cloud -> height = depth_image.rows;
@@ -48,7 +48,7 @@ Frame::Frame(std::string file_path)
         }   
     }
 #else
-    cudaReadPointCloud((ushort*)depth_image.data, (float*)points.data(), s.width, s.height);
+    cudaReadPointCloud((ushort*)depth_image.data, (float*)points.data(), size.width, size.height);
     cloud -> points = points;
 #endif
 }
@@ -61,9 +61,6 @@ Frame::Frame(pcl::PointCloud<pcl::PointXYZ>::Ptr cl)
 }
 
 
-/**
- *  segment_planes uses the OrganizedMultiPlaneDetection from PCL library
- */
 std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> Frame::segment_planes(double dth, double ath, double cur)
 {
     /** 
@@ -117,6 +114,21 @@ std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> Frame::segment_planes(double dt
     return planes;
 }
 
+void Frame::segmentPlanes()
+{
+    /** Estimate surface normals **/
+    pcl::IntegralImageNormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
+    ne.setNormalEstimationMethod(ne.AVERAGE_3D_GRADIENT);
+    ne.setMaxDepthChangeFactor(0.02f);
+    ne.setNormalSmoothingSize(10.0f);
+    ne.setInputCloud(cloud);
+    ne.compute(*normals);
+
+    /** Initialize the union find structure **/
+    UnionFindElem elements[size.width * size.height];
+
+    cudaSegmentPlanes((float*)(normals -> points.data()), (int*) elements, size.width, size.height);
+}
 
 pcl::PointCloud<pcl::PointXYZ>::Ptr Frame::transform(const Eigen::Transform<float, 3, Eigen::Affine> &transformation)
 {
