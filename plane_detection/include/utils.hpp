@@ -40,4 +40,16 @@ int find(UnionFindElem *elements, int i);
  */
 void union_join(UnionFindElem *elements, int x, int y);
 
+
+/**
+ *  Struct to work with pcl normals in cuda kernel.
+ */
+struct CudaNormal
+{
+    float x;
+    float y;
+    float z;
+    CudaNormal() : x(0.0f), y(0.0f), z(0.0f) {}
+};
+
 #endif

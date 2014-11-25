@@ -58,6 +58,8 @@ Frame::Frame(pcl::PointCloud<pcl::PointXYZ>::Ptr cl)
 {
     cloud = cl; 
     normals = pcl::PointCloud<pcl::Normal>::Ptr(new pcl::PointCloud<pcl::Normal>);
+    size.width = cl -> width;
+    size.height = cl -> height;
 }
 
 
@@ -114,8 +116,13 @@ std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> Frame::segment_planes(double dt
     return planes;
 }
 
-void Frame::segmentPlanes()
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr Frame::segmentPlanes()
 {
+    unsigned char red [6] = {255, 0, 0, 255, 255, 0};
+    unsigned char grn [6] = { 0, 255, 0, 255, 0, 255};
+    unsigned char blu [6] = { 0, 0, 255, 0, 255, 255};
+
+
     /** Estimate surface normals **/
     pcl::IntegralImageNormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
     ne.setNormalEstimationMethod(ne.AVERAGE_3D_GRADIENT);
@@ -127,7 +134,24 @@ void Frame::segmentPlanes()
     /** Initialize the union find structure **/
     UnionFindElem elements[size.width * size.height];
 
-    cudaSegmentPlanes((float*)(normals -> points.data()), (int*) elements, size.width, size.height);
+    cudaSegmentPlanes((float*)(normals -> points.data()), elements, size.width, size.height);
+
+    int i = 0;
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr result(new pcl::PointCloud<pcl::PointXYZRGB>());
+    for (ushort v = 0; v < size.height; v++) {
+        for (ushort u = 0; u < size.width; u++, i++) {
+            pcl::PointXYZRGB point;
+            point.x = cloud -> at(u, v).x;
+            point.y = cloud -> at(u, v).y;
+            point.z = cloud -> at(u, v).z;
+            point.r = red[find(elements, i) % 6];
+            point.b = blu[find(elements, i) % 6];
+            point.g = grn[find(elements, i) % 6];
+            result -> points.push_back(point);
+        }   
+    }
+
+    return result;
 }
 
 pcl::PointCloud<pcl::PointXYZ>::Ptr Frame::transform(const Eigen::Transform<float, 3, Eigen::Affine> &transformation)

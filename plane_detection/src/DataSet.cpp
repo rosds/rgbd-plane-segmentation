@@ -274,25 +274,32 @@ void DataSet::displaySegmentedFrame(string ts, bool normals)
     Transform3D t = groundtruth_transforms[ts];
     Frame frame(f.transform(t));
 
-    viewer -> addPointCloud(frame.getPointCloud());
+    /*
+     *viewer -> addPointCloud(frame.getPointCloud());
+     */
 
-    // Segment the frame
-    std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> planes;
-    planes = frame.segment_planes();
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud = frame.segmentPlanes();
 
-    displayPlanarRegions(frame.regions, viewer);
-
-    // Load the segments on the viewer
-    for (size_t i = 0; i < planes.size(); i++) {
-        viewer -> addPointCloud<pcl::PointXYZ> (planes[i], "plane" + i);
-        viewer -> setPointCloudRenderingProperties (
-                pcl::visualization::PCL_VISUALIZER_COLOR,
-                color[i][0],
-                color[i][1],
-                color[i][2], 
-                "plane" + i
-        ); 
-    }
+/*
+ *    // Segment the frame
+ *    std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> planes;
+ *    planes = frame.segment_planes();
+ *
+ *    displayPlanarRegions(frame.regions, viewer);
+ *
+ *    // Load the segments on the viewer
+ *    for (size_t i = 0; i < planes.size(); i++) {
+ *        viewer -> addPointCloud<pcl::PointXYZ> (planes[i], "plane" + i);
+ *        viewer -> setPointCloudRenderingProperties (
+ *                pcl::visualization::PCL_VISUALIZER_COLOR,
+ *                color[i][0],
+ *                color[i][1],
+ *                color[i][2], 
+ *                "plane" + i
+ *        ); 
+ *    }
+ */ 
+    viewer -> addPointCloud(cloud);
 
     // Visualize normals
     if (normals) {

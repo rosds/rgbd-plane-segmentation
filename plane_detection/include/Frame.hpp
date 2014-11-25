@@ -43,7 +43,7 @@ struct CameraParameters {
 
 /** Cuda functions **/
 extern void cudaReadPointCloud(ushort* depth, float* points, const int width, const int height);
-extern void cudaSegmentPlanes(float* normals, int* labels, const int width, const int height);
+extern void cudaSegmentPlanes(float* normals, UnionFindElem* labels, const int width, const int height);
 
 /**
  *  RGB-D frame.
@@ -120,7 +120,7 @@ class Frame
          *  @brief Segment the point
          *  See the Trevor and Gedikli paper
          */
-        void segmentPlanes();
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr segmentPlanes();
 
         std::vector< pcl::PlanarRegion<pcl::PointXYZ>, Eigen::aligned_allocator<pcl::PlanarRegion<pcl::PointXYZ> > > regions;
         std::vector<pcl::ModelCoefficients> model_coefficients;

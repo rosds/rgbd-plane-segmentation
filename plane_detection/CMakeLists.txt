@@ -28,10 +28,10 @@ if(CUDA_FOUND)
         set (CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}; -g -G)
     endif(CMAKE_BUILD_TYPE MATCHES DEBUG) 
     cuda_include_directories(include)
-    cuda_compile(CUDA_FUNC src/Frame.cu)
+    cuda_compile(CUDA_FUNC src/cuda/Frame.cu)
     cuda_add_library(cuacceleration SHARED 
         src/Frame.cpp 
-        src/Frame.cu
+        src/cuda/Frame.cu
         src/utils.cpp
     )
     add_definitions(-DWITH_CUDA)
