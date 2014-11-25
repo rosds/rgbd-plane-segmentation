@@ -8,7 +8,7 @@ include_directories(include ${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 
-set(SRC src/main.cpp src/Metric.cpp src/GHDistance.cpp)
+set(SRC src/main.cpp src/Metric.cpp src/GHDistance.cpp src/KeypointDetector.cpp)
 
 add_executable (gh ${SRC})
 add_executable (voxel_grid src/voxel_grid.cpp)
